@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title> My_Gallery</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #e6f2ff;
+      padding: 20px;
+      color: #2c3e50;
+    }
+
+    h1 {
+      text-align: center;
+      margin: 20px 0 30px;
+      color: #1a5276;
+      font-size: 2.5rem;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+    }
+
+    .controls {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin-bottom: 25px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 30px;
+      background-color: #3498db;
+      color: white;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn:hover {
+      background-color: #2980b9;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    .btn-danger {
+      background-color: #e74c3c;
+    }
+
+    .btn-danger:hover {
+      background-color: #c0392b;
+    }
+
+    .btn-edit {
+      background-color: #2ecc71;
+    }
+
+    .btn-edit:hover {
+      background-color: #27ae60;
+    }
+
+    .gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 20px;
+    }
+
+    .gallery-item {
+      position: relative;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s ease;
+      background-color: white;
+    }
+
+    .gallery-item:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    }
+
+    .gallery-item img {
+      width: 100%;
+      height: 220px;
+      object-fit: cover;
+      display: block;
+    }
+
+    .gallery-item .item-actions {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      display: flex;
+      gap: 8px;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .gallery-item:hover .item-actions {
+      opacity: 1;
+    }
+
+    .action-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: none;
+      background-color: rgba(255, 255, 255, 0.9);
+      color: #3498db;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+      transition: all 0.2s ease;
+    }
+
+    .action-btn:hover {
+      background-color: #3498db;
+      color: white;
+      transform: scale(1.1);
+    }
+
+    .action-btn.delete {
+      color: #e74c3c;
+    }
+
+    .action-btn.delete:hover {
+      background-color: #e74c3c;
+      color: white;
+    }
+
+    .item-info {
+      padding: 15px;
+      background-color: white;
+    }
+
+    .item-info h3 {
+      margin-bottom: 5px;
+      color: #2c3e50;
+    }
+
+    .item-info p {
+      color: #7f8c8d;
+      font-size: 0.9rem;
+    }
+
+    /* Lightbox modal */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 100;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0, 0, 0, 0.9);
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal-content {
+      position: relative;
+      max-width: 90%;
+      max-height: 90%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .modal img {
+      max-width: 100%;
+      max-height: 80vh;
+      border-radius: 8px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.5);
+    }
+
+    .modal.active {
+      display: flex;
+    }
+
+    .close {
+      position: absolute;
+      top: 30px;
+      right: 40px;
+      font-size: 40px;
+      color: white;
+      text-decoration: none;
+      font-weight: bold;
+      transition: color 0.3s ease;
+    }
+
+    .close:hover {
+      color: #3498db;
+    }
+
+    .edit-tools {
+      display: flex;
+      gap: 10px;
+      margin-top: 15px;
+    }
+
+    .edit-btn {
+      padding: 8px 15px;
+      background-color: #3498db;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    .edit-btn:hover {
+      background-color: #2980b9;
+    }
+
+    /* Add image modal */
+    .add-modal {
+      display: none;
+      position: fixed;
+      z-index: 100;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.7);
+      justify-content: center;
+      align-items: center;
+    }
+
+    .add-modal.active {
+      display: flex;
+    }
+
+    .add-modal-content {
+      background-color: white;
+      padding: 30px;
+      border-radius: 10px;
+      width: 90%;
+      max-width: 500px;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+    }
+
+    .add-modal h2 {
+      margin-bottom: 20px;
+      color: #1a5276;
+      text-align: center;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: #2c3e50;
+    }
+
+    .form-group input, 
+    .form-group textarea,
+    .form-group select {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #bdc3c7;
+      border-radius: 4px;
+      font-family: inherit;
+    }
+
+    .form-group textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    .form-group.file-input {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .form-group.file-input input[type="file"] {
+      position: absolute;
+      left: 0;
+      top: 0;
+      opacity: 0;
+      width: 100%;
+      height: 100%;
+      cursor: pointer;
+    }
+
+    .file-input-label {
+      display: block;
+      padding: 10px;
+      background-color: #f8f9fa;
+      border: 1px dashed #bdc3c7;
+      border-radius: 4px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .file-input-label:hover {
+      background-color: #e9ecef;
+      border-color: #3498db;
+    }
+
+    .file-input-label i {
+      font-size: 24px;
+      margin-bottom: 8px;
+      color: #3498db;
+    }
+
+    .file-preview {
+      margin-top: 10px;
+      max-width: 100%;
+      max-height: 150px;
+      display: none;
+    }
+
+    .source-tabs {
+      display: flex;
+      margin-bottom: 20px;
+      border-bottom: 1px solid #bdc3c7;
+    }
+
+    .tab-btn {
+      padding: 10px 20px;
+      background: none;
+      border: none;
+      border-bottom: 3px solid transparent;
+      cursor: pointer;
+      font-weight: 600;
+      color: #7f8c8d;
+      transition: all 0.3s;
+    }
+
+    .tab-btn.active {
+      color: #3498db;
+      border-bottom-color: #3498db;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    /* Crop overlay */
+    .crop-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.7);
+      z-index: 200;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .crop-overlay.active {
+      display: flex;
+    }
+
+    .crop-container {
+      background-color: white;
+      padding: 20px;
+      border-radius: 8px;
+      width: 90%;
+      max-width: 800px;
+    }
+
+    .crop-area {
+      width: 100%;
+      height: 400px;
+      background-color: #f1f1f1;
+      margin-bottom: 20px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .crop-area img {
+      max-width: 100%;
+      max-height: 100%;
+      display: block;
+      margin: 0 auto;
+    }
+
+    @media (max-width: 768px) {
+      .gallery {
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      }
+      
+      .controls {
+        flex-direction: column;
+        align-items: center;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <h1><i class="fas fa-camera"></i> Blue Image Gallery</h1>
+  
+  <div class="controls">
+    <button class="btn" id="addImageBtn">
+      <i class="fas fa-plus"></i> Add Image
+    </button>
+    <button class="btn btn-edit" id="editGalleryBtn">
+      <i class="fas fa-edit"></i> Edit Gallery
+    </button>
+  </div>
+
+  <div class="gallery" id="galleryContainer">
+    <!-- Images will be added dynamically -->
+  </div>
+
+  <!-- Lightbox Modal -->
+  <div class="modal" id="imageModal">
+    <a href="#" class="close">&times;</a>
+    <div class="modal-content">
+      <img id="modalImage" src="" alt="Enlarged view">
+      <div class="edit-tools" id="editTools">
+        <button class="edit-btn" id="cropBtn"><i class="fas fa-crop"></i> Crop</button>
+        <button class="edit-btn" id="rotateBtn"><i class="fas fa-sync-alt"></i> Rotate</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Image Modal -->
+  <div class="add-modal" id="addModal">
+    <div class="add-modal-content">
+      <h2><i class="fas fa-cloud-upload-alt"></i> Add New Image</h2>
+      
+      <div class="source-tabs">
+        <button class="tab-btn active" data-tab="upload-tab">Upload</button>
+        <button class="tab-btn" data-tab="url-tab">From URL</button>
+      </div>
+      
+      <form id="addImageForm">
+        <div class="tab-content active" id="upload-tab">
+          <div class="form-group">
+            <label for="imageTitle">Image Title</label>
+            <input type="text" id="imageTitle">
+          </div>
+          <div class="form-group">
+            <label for="imageDescription">Description</label>
+            <textarea id="imageDescription"></textarea>
+          </div>
+          <div class="form-group file-input">
+            <label>Select Image</label>
+            <label class="file-input-label" for="imageUpload">
+              <i class="fas fa-cloud-upload-alt"></i>
+              <div>Click to browse or drag and drop</div>
+              <input type="file" id="imageUpload" accept="image/*">
+            </label>
+            <img id="filePreview" class="file-preview" src="" alt="Preview">
+          </div>
+        </div>
+        
+        <div class="tab-content" id="url-tab">
+          <div class="form-group">
+            <label for="imageTitleUrl">Image Title</label>
+            <input type="text" id="imageTitleUrl">
+          </div>
+          <div class="form-group">
+            <label for="imageDescriptionUrl">Description</label>
+            <textarea id="imageDescriptionUrl"></textarea>
+          </div>
+          <div class="form-group">
+            <label for="imageUrl">Image URL</label>
+            <input type="url" id="imageUrl" placeholder="https://example.com/image.jpg">
+          </div>
+        </div>
+        
+        <div class="modal-actions">
+          <button type="button" class="btn btn-danger" id="cancelAddBtn">Cancel</button>
+          <button type="submit" class="btn">Add Image</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Crop Overlay -->
+  <div class="crop-overlay" id="cropOverlay">
+    <div class="crop-container">
+      <h2>Crop Image</h2>
+      <div class="crop-area" id="cropArea">
+        <img id="imageToCrop" src="" alt="Image to crop">
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-danger" id="cancelCropBtn">Cancel</button>
+        <button class="btn" id="applyCropBtn">Apply Crop</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Sample initial images
+      const initialImages = [
+        {
+          id: 1,
+          title: "Mountain View",
+          description: "Beautiful mountain landscape with clouds",
+          url: "https://picsum.photos/id/1015/600/400"
+        },
+        {
+          id: 2,
+          description: "A peaceful river flowing through the forest",
+          url: "https://picsum.photos/id/1016/600/400"
+        },
+        {
+          id: 3,
+          title: "Cliffside",
+          description: "Dramatic cliffs overlooking the ocean",
+          url: "https://picsum.photos/id/1018/600/400"
+        },
+        {
+          id: 4,
+          title: "Winter Forest",
+          description: "Snow-covered trees in winter",
+          url: "https://picsum.photos/id/1020/600/400"
+        },
+        {
+          id: 5,
+          title: "Sunset Beach",
+          url: "https://picsum.photos/id/1021/600/400"
+        },
+        {
+          id: 6,
+          title: "Misty Mountains",
+          description: "Fog rolling over mountain peaks",
+          url: "https://picsum.photos/id/1022/600/400"
+        }
+      ];
+
+      const galleryContainer = document.getElementById('galleryContainer');
+      const imageModal = document.getElementById('imageModal');
+      const modalImage = document.getElementById('modalImage');
+      const addModal = document.getElementById('addModal');
+      const addImageForm = document.getElementById('addImageForm');
+      const addImageBtn = document.getElementById('addImageBtn');
+      const cancelAddBtn = document.getElementById('cancelAddBtn');
+      const cropOverlay = document.getElementById('cropOverlay');
+      const cropBtn = document.getElementById('cropBtn');
+      const cancelCropBtn = document.getElementById('cancelCropBtn');
+      const applyCropBtn = document.getElementById('applyCropBtn');
+      const imageToCrop = document.getElementById('imageToCrop');
+      const editTools = document.getElementById('editTools');
+      const editGalleryBtn = document.getElementById('editGalleryBtn');
+      const tabBtns = document.querySelectorAll('.tab-btn');
+      const tabContents = document.querySelectorAll('.tab-content');
+      const imageUpload = document.getElementById('imageUpload');
+      const filePreview = document.getElementById('filePreview');
+
+      let images = [];
+      let currentImageId = null;
+      let editMode = false;
+      let selectedFile = null;
+
+      // Initialize gallery
+      function initGallery() {
+        // Load from localStorage if available
+        const savedImages = localStorage.getItem('galleryImages');
+        if (savedImages) {
+          images = JSON.parse(savedImages);
+        } else {
+          images = [...initialImages];
+          saveToLocalStorage();
+        }
+        renderGallery();
+      }
+
+      // Save images to localStorage
+      function saveToLocalStorage() {
+        localStorage.setItem('galleryImages', JSON.stringify(images));
+      }
+
+      // Render gallery
+      function renderGallery() {
+        galleryContainer.innerHTML = '';
+        images.forEach(image => {
+          const galleryItem = document.createElement('div');
+          galleryItem.className = 'gallery-item';
+          galleryItem.dataset.id = image.id;
+          
+          galleryItem.innerHTML = `
+            <img src="${image.url}" alt="${image.title || 'Gallery image'}">
+            <div class="item-actions">
+              <button class="action-btn edit" title="Edit"><i class="fas fa-edit"></i></button>
+              <button class="action-btn delete" title="Delete"><i class="fas fa-trash"></i></button>
+            </div>
+            <div class="item-info">
+              ${image.title ? `<h3>${image.title}</h3>` : ''}
+              ${image.description ? `<p>${image.description}</p>` : ''}
+            </div>
+          `;
+          
+          galleryContainer.appendChild(galleryItem);
+          
+          // Add click event to open modal
+          galleryItem.querySelector('img').addEventListener('click', function(e) {
+            if (!editMode) {
+              openModal(image);
+            }
+          });
+          
+          // Add event listeners to action buttons
+          const editBtn = galleryItem.querySelector('.action-btn.edit');
+          const deleteBtn = galleryItem.querySelector('.action-btn.delete');
+          
+          editBtn.addEventListener('click', function() {
+            // In a real app, this would open an edit form
+            alert(`Edit functionality for image ${image.id} would go here`);
+          });
+          
+          deleteBtn.addEventListener('click', function() {
+            deleteImage(image.id);
+          });
+        });
+      }
+
+      // Open image modal
+      function openModal(image) {
+        currentImageId = image.id;
+        modalImage.src = image.url;
+        imageModal.classList.add('active');
+      }
+
+      // Close image modal
+      function closeModal() {
+        imageModal.classList.remove('active');
+        currentImageId = null;
+      }
+
+      // Delete image
+      function deleteImage(id) {
+        if (confirm('Are you sure you want to delete this image?')) {
+          images = images.filter(img => img.id !== id);
+          saveToLocalStorage();
+          renderGallery();
+          closeModal();
+        }
+      }
+
+      // Add new image from URL
+      function addImageFromUrl(title, description, url) {
+        const newId = images.length > 0 ? Math.max(...images.map(img => img.id)) + 1 : 1;
+        const newImage = {
+          id: newId,
+          title: title,
+          description: description,
+          url: url
+        };
+        images.push(newImage);
+        saveToLocalStorage();
+        renderGallery();
+      }
+
+      // Add new image from file upload
+      function addImageFromFile(title, description, file) {
+        return new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onload = function(e) {
+            const newId = images.length > 0 ? Math.max(...images.map(img => img.id)) + 1 : 1;
+            const newImage = {
+              id: newId,
+              title: title,
+              description: description,
+              url: e.target.result
+            };
+            images.push(newImage);
+            saveToLocalStorage();
+            renderGallery();
+            resolve();
+          };
+          reader.readAsDataURL(file);
+        });
+      }
+
+      // Toggle edit mode
+      function toggleEditMode() {
+        editMode = !editMode;
+        editGalleryBtn.innerHTML = editMode ? 
+          `<i class="fas fa-times"></i> Cancel Edit` : 
+          `<i class="fas fa-edit"></i> Edit Gallery`;
+        
+        // Show/hide edit tools in modal if open
+        if (imageModal.classList.contains('active')) {
+          editTools.style.display = editMode ? 'flex' : 'none';
+        }
+        
+        // Show/hide action buttons on all gallery items
+        document.querySelectorAll('.item-actions').forEach(actions => {
+          actions.style.opacity = editMode ? '1' : '';
+        });
+      }
+
+      // Open crop tool
+      function openCropTool() {
+        if (!currentImageId) return;
+        
+        const image = images.find(img => img.id === currentImageId);
+        if (image) {
+          imageToCrop.src = image.url;
+          cropOverlay.classList.add('active');
+          // In a real app, you would initialize a crop library here
+        }
+      }
+
+      // Close crop tool
+      function closeCropTool() {
+        cropOverlay.classList.remove('active');
+      }
+
+      // Switch between tabs
+      function switchTab(tabId) {
+        tabBtns.forEach(btn => {
+          btn.classList.toggle('active', btn.dataset.tab === tabId);
+        });
+        
+        tabContents.forEach(content => {
+          content.classList.toggle('active', content.id === tabId);
+        });
+      }
+
+      // Event listeners
+      document.querySelector('.close').addEventListener('click', closeModal);
+      
+      addImageBtn.addEventListener('click', function() {
+        addModal.classList.add('active');
+        switchTab('upload-tab'); // Default to upload tab
+        addImageForm.reset();
+        filePreview.style.display = 'none';
+        selectedFile = null;
+      });
+      
+      cancelAddBtn.addEventListener('click', function() {
+        addModal.classList.remove('active');
+      });
+      
+      addImageForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const activeTab = document.querySelector('.tab-content.active').id;
+        
+        if (activeTab === 'upload-tab') {
+          const title = document.getElementById('imageTitle').value;
+          const description = document.getElementById('imageDescription').value;
+          
+          if (!selectedFile) {
+            alert('Please select an image file');
+            return;
+          }
+          
+          await addImageFromFile(title, description, selectedFile);
+        } else {
+          const title = document.getElementById('imageTitleUrl').value;
+          const description = document.getElementById('imageDescriptionUrl').value;
+          const url = document.getElementById('imageUrl').value;
+          
+          if (!url) {
+            alert('Please enter an image URL');
+            return;
+          }
+          
+          addImageFromUrl(title, description, url);
+        }
+        
+        addModal.classList.remove('active');
+        addImageForm.reset();
+        filePreview.style.display = 'none';
+        selectedFile = null;
+      });
+      
+      // File upload handling
+      imageUpload.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+          selectedFile = file;
+          const reader = new FileReader();
+          reader.onload = function(event) {
+            filePreview.src = event.target.result;
+            filePreview.style.display = 'block';
+          };
+          reader.readAsDataURL(file);
+        }
+      });
+      
+      // Drag and drop for file upload
+      const fileInputLabel = document.querySelector('.file-input-label');
+      fileInputLabel.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        this.style.backgroundColor = '#e9ecef';
+        this.style.borderColor = '#3498db';
+      });
+      
+      fileInputLabel.addEventListener('dragleave', function(e) {
+        e.preventDefault();
+        this.style.backgroundColor = '#f8f9fa';
+        this.style.borderColor = '#bdc3c7';
+      });
+      
+      fileInputLabel.addEventListener('drop', function(e) {
+        e.preventDefault();
+        this.style.backgroundColor = '#f8f9fa';
+        this.style.borderColor = '#bdc3c7';
+        
+        const file = e.dataTransfer.files[0];
+        if (file && file.type.match('image.*')) {
+          selectedFile = file;
+          const reader = new FileReader();
+          reader.onload = function(event) {
+            filePreview.src = event.target.result;
+            filePreview.style.display = 'block';
+          };
+          reader.readAsDataURL(file);
+        } else {
+          alert('Please select an image file');
+        }
+      });
+      
+      // Tab switching
+      tabBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+          switchTab(this.dataset.tab);
+        });
+      });
+      
+      cropBtn.addEventListener('click', openCropTool);
+      cancelCropBtn.addEventListener('click', closeCropTool);
+      
+      applyCropBtn.addEventListener('click', function() {
+        // In a real app, this would apply the crop and update the image
+        alert('In a real app, this would apply the crop and update the image');
+        closeCropTool();
+      });
+      
+      editGalleryBtn.addEventListener('click', toggleEditMode);
+
+      // Close modals when clicking outside content
+      window.addEventListener('click', function(e) {
+        if (e.target === imageModal) {
+          closeModal();
+        }
+        if (e.target === addModal) {
+          addModal.classList.remove('active');
+        }
+        if (e.target === cropOverlay) {
+          closeCropTool();
+        }
+      });
+
+      // Initialize the gallery
+      initGallery();
+    });
+  </script>
+</body>
+</html>
